@@ -121,13 +121,19 @@ class GithubProjectItemCollection < GithubQuery
                   ...on Issue {
                     title
                     number
+                    url
+                    labels(first: 5) {
+                      nodes {
+                        name
+                      }
+                    }
                   }
                   ...on PullRequest {
                     title
                     number
                   }
                 }
-                fieldValues(first: 20) {
+                fieldValues(first: 50) {
                   nodes {
                     ... on ProjectV2ItemFieldTextValue {
                       text
@@ -247,11 +253,19 @@ class GithubProjectItem < GithubQuery
   end
 
   def number
-    "##{result.dig("content", "number")}" if result.dig("content", "number")
+    "#{result.dig("content", "number")}" if result.dig("content", "number")
+  end
+
+  def url
+    result.dig("content", "url")
   end
 
   def title
     [number, field_value_attributes["Title"]].join(" ")
+  end
+
+  def labels
+    result.dig("content", "labels", "nodes").collect { |label_data| label_data["name"] }.join(",")
   end
 
   def attributes
@@ -262,7 +276,9 @@ class GithubProjectItem < GithubQuery
     {
       id: id,
       number: number,
-      title: title
+      title: title,
+      url: url,
+      labels: labels
     }
   end
 
